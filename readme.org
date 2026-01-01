@@ -1,0 +1,98 @@
+#+options: title:nil toc:nil num:nil ':t
+
+#+latex_header: \topmargin=-0.45in
+#+latex_header: \evensidemargin=0in
+#+latex_header: \oddsidemargin=0in
+#+latex_header: \textwidth=6.5in
+
+
+# syntax highlighting for html exports
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+
+* ob-clingo
+~Org-Babel~ mode to execute [[https://en.wikipedia.org/wiki/Answer_set_programming][Answer Set Programs]] using [[https://potassco.org/clingo/][Potassco clingo]] within emacs ~Org-mode~.
+
+* Installation
+- Copy the ~ob-clingo.el~ file to a directory in your file system.
+- Add this to your init file:
+  #+begin_src elisp
+  (add-to-list 'load-path "/path/to/install-directory")
+  (require 'ob-clingo)
+  #+end_src
+
+- If you use ~use-package~, you can also write
+  #+begin_src elisp
+  (use-package ob-clingo
+    :load-path "/path/to/install-directory"
+  )
+  #+end_src
+** Dependencies
+In order to use it you must have [[https://potassco.org/clingo/][Potassco clingo]] installed.
+
+* Usage
+The following example shows how to write ~org-babel~ source block for finding Hamiltonian cycles in a graph
+using [[https://potassco.org/clingo/][clingo]].
+
+*** Here is a representation of the graph as a problem instance:
+#+begin_src org
+  #+name: graph
+  #+begin_src clingo :tangle graph.lp :results none
+  node(1..6).
+  edge(1, 2). edge(2, 1). edge(4, 1). edge(2, 3). edge(2, 6).
+  edge(3, 4). edge(3, 5). edge(5, 4). edge(6, 3).
+  #+end_src
+#+end_src
+Press ~C-c C-v t~ to save the instance to file ~graph.lp~.
+
+*** This encodes the logic for finding Hamiltonian cycles
+It uses the graph in file ~graph.lp~ as instance.
+#+begin_src org
+#+begin_src clingo :n 2 :options -c n=6 :instance graph.lp
+{ begin(X) : node(X) } == 1.
+
+% generate
+{path(X, Y)} :- edge(X, Y).
+
+% define
+reached(Y) :- begin(X), path(X, Y).
+reached(Y) :- reached(X), path(X, Y).
+
+% test constraints
+:- node(X), not reached(X).          % all nodes are visited
+:- path(X, Y), path(X, Y1), Y != Y1. % only one outgoing edge
+:- path(X, Y), path(X1, Y), X != X1. % only one incomming edge
+
+% display
+#show path/2.
+#show begin/1.
+#+end_src
+#+end_src
+
+If you press ~C-c C-c~ with your point in the code block the following answer sets are generated and
+inserted in your org document:
+#+begin_src org
+#+RESULTS:
+#+begin_example
+clingo version 5.8.0 (6d1efb6)
+Reading from ...werner/DEVELOP/emacs/org/roam/graph.lp ...
+Solving...
+Answer: 1 (Time: 0.001s)
+path(1,2) path(4,1) path(2,6) path(3,5) path(5,4) path(6,3) begin(6)
+Answer: 2 (Time: 0.001s)
+path(1,2) path(4,1) path(2,6) path(3,5) path(5,4) path(6,3) begin(4)
+SATISFIABLE
+
+Models       : 2+
+Calls        : 1
+Time         : 0.001s (Solving: 0.00s 1st Model: 0.00s Unsat: 0.00s)
+CPU Time     : 0.001s
+#+end_example
+#+end_src
+
+* Supported header arguments
+- =:n= :: -  optional number of answer sets to generate; 0 tells it to generate all answer sets,
+  defaults to 1.
+- =:options= :: - optional command line options, list available options by invoking `clingo --help',
+  default is empty
+- =:instance= :: - optional file name containing a problem instance.
+  
