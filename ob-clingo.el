@@ -51,7 +51,6 @@
 (require 'ob-ref)
 (require 'ob-comint)
 (require 'ob-eval)
-(require 'clingo-mode)
 
 ;; optionally define a file extension for this language
 (add-to-list 'org-babel-tangle-lang-exts '("clingo" . "lp"))
