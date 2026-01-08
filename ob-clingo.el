@@ -4,7 +4,7 @@
 
 ;; Author: Werner Jäger
 ;; Keywords: emacs, literate programming, org-mode, clingo, answer-set-programming, org-babel
-;; URL: https://github.com/wejaeger/cling
+;; URL: https://github.com/wejaeger/ob-clingo
 ;; Version: 0.01
 
 ;;; License:
@@ -49,7 +49,6 @@
 ;;; Code:
 (require 'ob)
 (require 'ob-ref)
-(require 'ob-comint)
 (require 'ob-eval)
 
 ;; optionally define a file extension for this language
@@ -73,7 +72,7 @@
     (concat
      (mapconcat ;; define any variables
       (lambda (pair)
-        (format "%s=%S"
+        (format "#const %s = %s."
                 (car pair) (org-babel-clingo-var-to-clingo (cdr pair))))
       vars "\n")
      "\n" body "\n")))
@@ -130,27 +129,10 @@
   )
 )
 
-;; This function should be used to assign any variables in params in
-;; the context of the session environment.
-(defun org-babel-prep-session:clingo (session params)
-  "Prepare SESSION according to the header arguments specified in PARAMS."
-)
-
 (defun org-babel-clingo-var-to-clingo (var)
   "Convert an elisp var into a string of clingo source code
    specifying a var of the same value."
   (format "%S" var))
-
-(defun org-babel-clingo-table-or-string (results)
-  "If the results look like a table, then convert them into an
-   Emacs-lisp table, otherwise return the results as a string."
-)
-
-(defun org-babel-clingo-initiate-session (&optional session)
-  "If there is not a current inferior-process-buffer in SESSION then create.
-   Return the initialized session."
-  (unless (string= session "none"))
-)
 
 ;; same as `org-babel-my-eva', except only negative return code is considered
 ;; to be an error.

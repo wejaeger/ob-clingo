@@ -1,0 +1,102 @@
+#+title: ob-clingo example
+
+# syntax highlighting for html exports
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+
+First you need to extract all necessary source codes from their respective code blocks. To do so,
+press =C-c C-v t= 
+
+* Hamiltonian cycle
+#+name: graph
+#+caption: Problem instance
+#+begin_src clingo :tangle graph.lp :results none
+node(1). node(2). node(3). node(4). node(5). node(6).
+edge((1, 2)). edge((2, 1)). edge((4, 1)). edge((2, 3)). edge((2, 6)).
+edge((3, 4)). edge((3, 5)). edge((5, 4)). edge((6, 3)).
+#+end_src
+
+#+name: hamiltonian
+#+caption: Encoding
+#+begin_src clingo :n 2 :options --outf=2 :instance graph.lp :results none
+{ begin(X) : node(X) } == 1.
+
+% generate
+{path(X, Y)} :- edge((X, Y)).
+
+% definehh
+reached(Y) :- begin(X), path(X, Y).
+reached(Y) :- reached(X), path(X, Y).
+
+% test constraints
+:- node(X), not reached(X).          % all nodes are visitedhh
+:- path(X, Y), path(X, Y1), Y != Y1. % only one outgoing edge
+:- path(X, Y), path(X1, Y), X != X1. % only one incomming edge
+
+% display
+#show path/2.
+#show begin/1.
+#+end_src
+
+#+name: models
+#+begin_src elisp :var json=hamiltonian :results output list drawer :exports results
+  (let* (
+         (tbl (json-parse-string json :array-type 'array))
+         (witnesses (gethash "Witnesses" (aref (gethash "Call" tbl) 0)))
+        )
+        (seq-map #'(lambda (val) (print (gethash "Value" val))) witnesses))
+        ;(seq-doseq (val witnesses) (gethash "Value" val)))
+#+end_src
+
+*Stable models*
+#+RESULTS: models
+
+* Instructions
+1. Press =C-c C-v t= to save all necessary source code files
+2. Place cursor on the code block named =hamiltonian=
+3. Press = C-c C-c= to execute the encoding and generate the stable models
+4. Place cursor on the code block named =models= 
+5. Press =C-c C-c= to display the stable models under the =RESULTS= drawer
+
+* Example of a raw json output                                     :noexport:
+#+begin_example
+{
+  "Solver": "clingo version 5.8.0 (6d1efb6)",
+  "Input": [
+    "/home/werner/DEVELOP/emacs/org/roam/graph.lp","/tmp/babel-IFoqKI/clingo-qP4rq6"
+  ],
+  "Call": [
+    {
+      "Start": 0.000,
+      "Witnesses": [
+        {
+          "Time": 0.001,
+          "Value": [
+            "path(1,2)", "path(4,1)", "path(2,6)", "path(3,5)", "path(5,4)", "path(6,3)", "begin(6)"
+          ]
+        },
+        {
+          "Time": 0.001,
+          "Value": [
+            "path(1,2)", "path(4,1)", "path(2,6)", "path(3,5)", "path(5,4)", "path(6,3)", "begin(4)"
+)          ]
+        }
+      ],
+      "Stop": 0.001
+    }
+  ],
+  "Result": "SATISFIABLE",
+  "Models": {
+    "Number": 2,
+    "More": "yes"
+  },
+  "Calls": 1,
+  "Time": {
+    "Total": 0.001,
+    "Solve": 0.000,
+    "Model": 0.000,
+    "Unsat": 0.000,
+    "CPU": 0.001
+  }
+}
+#+end_example
+

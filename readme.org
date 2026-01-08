@@ -95,4 +95,6 @@ CPU Time     : 0.001s
 - =:options= :: - optional command line options, list available options by invoking `clingo --help',
   default is empty
 - =:instance= :: - optional file name containing a problem instance.
-  
+- =:var= ::  a =:var NAME=ASSIGN= header argument inserts a Line =#const NAME = ASSIGN.= at the beginning
+  of the code block body.
+
